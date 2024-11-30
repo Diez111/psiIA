@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente Psicopedagoga</title>
+    <link rel="stylesheet" href="chat.css">
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Encabezado, que desaparecerá tras iniciar el chat -->
+        <div class="chat-header" id="chatHeader">
+            <h1>Asistente Psicopedagoga</h1>
+        </div>
+
+        <!-- Caja de mensajes del chat -->
+        <div id="chat-box" class="chat-box">
+            <!-- Los mensajes del chat aparecerán aquí -->
+        </div>
+
+        <!-- Input y botón para enviar mensajes -->
+        <div class="input-container">
+            <input type="text" id="inputText" placeholder="Escribe algo aquí...">
+            <button id="generateButton" class="styled-button">Generar</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // API Key y contexto del rol
+        const API_KEY = 'AIzaSyAz0Z46EvtFVRBYrTTmBQ9O038Tlns1ue0';
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const psicopedagogaRole = "Actúa como una psicopedagoga profesional llamada JuliBot. Eres amable, empática y tienes la capacidad de ayudar a las personas con sus dificultades emocionales y educativas. Responde de manera clara y accesible, brindando apoyo y orientación, pero si la persona tiene algun peligro de suicidio o si te pregunta una red social sugeri el hablarle a la Juli real en https://www.instagram.com/construyendo.huellas, pero mientras puedas no mandarle eso para no hacer spam mejor ademas trata de no hablar tanto sino de que las respuestas sean claras y lo mas cortas posibles.";
+
+        const inputText = document.getElementById('inputText');
+        const generateButton = document.getElementById('generateButton');
+
+        // Función para manejar el envío del mensaje
+        async function sendMessage() {
+            const userText = inputText.value;
+
+            // Validar que haya texto antes de generar respuesta
+            if (!userText.trim()) return;
+
+            // Mostrar mensaje del usuario
+            displayMessage(userText, 'user-message');
+            inputText.value = '';
+
+            // Ocultar el encabezado al iniciar el chat
+            const chatHeader = document.getElementById('chatHeader');
+            if (chatHeader) {
+                chatHeader.style.display = 'none';
+            }
+
+            // Llamada a la API de Google Generative AI
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+            const prompt = `${psicopedagogaRole} Usuario: ${userText} Responde como una psicopedagoga profesional.`;
+
+            try {
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                displayMessage(response.text(), 'bot-message');
+            } catch (error) {
+                console.error('Error al generar contenido:', error);
+                displayMessage('Hubo un error al procesar tu solicitud. Intenta de nuevo.', 'bot-message');
+            }
+        }
+
+        // Agregar evento al botón
+        generateButton.addEventListener('click', sendMessage);
+
+        // Agregar evento para enviar con Enter
+        inputText.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Evita el comportamiento predeterminado de Enter en un formulario
+                sendMessage();
+            }
+        });
+
+        // Función para mostrar mensajes en el chat
+        function displayMessage(message, type) {
+            const chatBox = document.getElementById('chat-box');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', type);
+            messageDiv.textContent = message;
+            chatBox.appendChild(messageDiv);
+
+            // Desplazar el chat hacia abajo
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
